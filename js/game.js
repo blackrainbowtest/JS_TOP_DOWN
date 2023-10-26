@@ -22,7 +22,8 @@ export class Game {
         // player controller binding
         window.addEventListener('keydown', this.handleKeyDown.bind(this))
         window.addEventListener('keyup', this.handleKeyUp.bind(this))
-        
+        canvas.addEventListener("mousedown", this.handleMouseDown.bind(this))
+        canvas.addEventListener("mouseup", this.handleMouseUp.bind(this))
         this.keys = {
             A: false, D: false, S: false, W: false
         }
@@ -71,7 +72,7 @@ export class Game {
             this.player.isMoving = true
         }
         this.player.updateMouseDirection(this.mouseX, this.mouseY)
-        this.player.update(deltaTime, data.player.frame)
+        this.player.update(deltaTime, data.player.frame, this.mouseX, this.mouseY)
     }
 
     draw() {
@@ -143,5 +144,13 @@ export class Game {
             default:
                 break
         }
+    }
+
+    handleMouseDown(event) {   
+        this.player.startShooting(this.mouseX, this.mouseY);
+    }
+
+    handleMouseUp(event) {   
+        this.player.stopShooting(this.mouseX, this.mouseY);
     }
 }

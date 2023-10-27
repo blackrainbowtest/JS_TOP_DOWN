@@ -41,8 +41,8 @@ export class Game {
 
     play() {
         this.lastFrameTime = performance.now()
+        // this.update()
         this.gameLoop(this.lastFrameTime)
-        this.update()
     }
 
     gameLoop(currentTime) {

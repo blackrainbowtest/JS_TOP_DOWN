@@ -2,11 +2,17 @@ export class Bullet {
     constructor(x, y, targetX, targetY, radius, color, speed) {
         this.x = x
         this.y = y
-        this.targetX = targetX
-        this.targetY = targetY
         this.radius = radius
         this.color = color
         this.speed = speed
+
+        const deltaX = targetX - x
+        const deltaY = targetY - y
+        const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2)
+
+        // geting vector way
+        this.dx = deltaX / distance
+        this.dy = deltaY / distance
     }
 
     draw(ctx) {
@@ -17,18 +23,11 @@ export class Bullet {
         ctx.closePath()
     }
 
-    move() {
-        const deltaX = this.targetX - this.x
-        const deltaY = this.targetY - this.y
-        const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2)
-
-        if (distance > 0) {
-            const directionX = deltaX / distance
-            const directionY = deltaY / distance
-
-            this.x += directionX * this.speed
-            this.y += directionY * this.speed
-        }
+    move(deltaTime) {
+        // move by vector way by bullet speed * deltatime
+        const frameDistance = this.speed * deltaTime
+        this.x += this.dx * frameDistance
+        this.y += this.dy * frameDistance
     }
 
     isOutOfScreen(canvasWidth, canvasHeight) {

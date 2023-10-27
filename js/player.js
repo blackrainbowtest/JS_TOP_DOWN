@@ -20,11 +20,11 @@ export class Player {
         this.targetY = 0
         this.shootFrameCounter = 0
         this.playerFrameCounters = {
-            flashlight: { KD: 1, clip: Infinity, ammo: 0, reg: 7 },
-            handgun: { KD: 4, clip: 8, ammo: 0, reg: 7 },
-            knife: { KD: 1, clip: Infinity, ammo: 0, reg: 7 },
-            rifle: { KD: 2, clip: 30, ammo: 0, reg: 7 },
-            shotgun: { KD: 3, clip: 7, ammo: 0, reg: 7 },
+            flashlight: { KD: 1, clip: Infinity, ammo: 0, reg: 7, speed: 350, ammoBag: 0, ammoBagLimit: 0, ammoSpawnTime: 0 },
+            handgun: { KD: 4, clip: 8, ammo: 8, reg: 7, speed: 750, ammoBag: 0, ammoBagLimit: 80, ammoSpawnTime: 5 },
+            knife: { KD: 1, clip: Infinity, ammo: 0, reg: 7, speed: 350, ammoBag: 0, ammoBagLimit: 0, ammoSpawnTime: 0 },
+            rifle: { KD: 2, clip: 30, ammo: 0, reg: 7, speed: 350, ammoBag: 0, ammoBagLimit: 300, ammoSpawnTime: 10 },
+            shotgun: { KD: 3, clip: 7, ammo: 0, reg: 7, speed: 350, ammoBag: 0, ammoBagLimit: 70, ammoSpawnTime: 7 },
         }
         this.loadImage()
         this.reloadCounter = 0
@@ -32,6 +32,7 @@ export class Player {
 
     loadImage() {
         this.image = this.load.Top_Down_Survivor[this.frame.type][this.frame.action][this.frame.count]
+        console.log(this.frame.type, this.frame.action, this.frame.count);
         this.image.onload = () => {
             this.draw()
         };
@@ -84,17 +85,24 @@ export class Player {
         ctx.save();
         ctx.translate(this.x + this.width / 2, this.y + this.height / 2)
         ctx.rotate(this.direction)
-
-        ctx.drawImage(this.image, -this.width / 2, -this.height / 2, this.width, this.height)
+        ctx.drawImage(this.image, -this.width / 2, -this.height / 2, this.width, this.height)        
         ctx.restore()
+        this.bullets.forEach((bullet) => {
+            bullet.draw(ctx)
+        })
     }
 
     update(deltaTime, frame, mouseX, mouseY) {
         this.spawnBullet()
         this.frame = frame
+        this.targetX = mouseX
+        this.targetY = mouseY
         this.isMoving ? this.frame.action = 'move' : this.frame.action = 'idle'
+        this.canShoot = this.playerFrameCounters[this.frame.type].ammo > 0      // canShoot checker
         if (this.isShooting && this.canShoot) {
-            this.shootFrameCounter++
+            if (this.frame.count > 2) {
+                this.frame.count = 0
+            }
             if ('shoot' in this.load.Top_Down_Survivor[this.frame.type]) {
                 this.frame.action = 'shoot'
             } else {
@@ -104,19 +112,21 @@ export class Player {
             if (this.frame.count === 2 && this.shootFrameCounter === 2) {
                 if (this.playerFrameCounters[this.frame.type].ammo > 0) {
                     this.playerFrameCounters[this.frame.type].ammo--
-                    console.log('pif');
+                    this.bullets.push(new Bullet(this.x, this.y, this.targetX, this.targetY, 5, 'red', this.playerFrameCounters[this.frame.type].speed))
+                    console.log(this.bullets);
                 }
             }
             if (this.shootFrameCounter % this.playerFrameCounters[this.frame.type].KD === 0) {
                 this.frame.count++;
                 this.shootFrameCounter = 0
             }
-
+            
             if (this.frame.count >= this.load.Top_Down_Survivor[this.frame.type][this.frame.action].length) {
                 this.frame.count = 0;
                 // checking shoot 
                 this.canShoot = true;
             }
+            this.shootFrameCounter++
         } else {
             this.loadImage();
             this.frame.count++;
@@ -125,7 +135,15 @@ export class Player {
                 this.frame.count = 0;
             }
         }
+        if (this.bullets.length) {
+            this.bullets.forEach((bullet) => {
+                bullet.move(deltaTime)
+            })
 
+            this.bullets = this.bullets.filter((bullet) => {
+                return !bullet.isOutOfScreen(canvas.width, canvas.height)
+            })
+        }
     }
 
     calculateMoveDistance(deltaTime, speed) {
@@ -135,11 +153,9 @@ export class Player {
     startShooting(targetX, targetY) {
         this.targetX = targetX;
         this.targetY = targetY;
-        this.isShooting = true;
-        this.frame.count = 0;
-
-        if (this.canShoot) {
-            // this.canShoot = false;
+        if (this.playerFrameCounters[this.frame.type].ammo > 0) {
+            this.isShooting = true
+            this.canShoot = true
         }
     }
 
@@ -151,9 +167,9 @@ export class Player {
         this.reloadCounter++
         for (let type in this.playerFrameCounters) {
             if (this.playerFrameCounters[type].clip != Infinity) {
-                if (this.playerFrameCounters[type].ammo < this.playerFrameCounters[type].clip) {
-                    if (this.reloadCounter % this.playerFrameCounters[type].clip === 0) {
-                        this.playerFrameCounters[type].ammo++
+                if (this.playerFrameCounters[type].ammoBag < this.playerFrameCounters[type].ammoBagLimit) {
+                    if (this.reloadCounter % this.playerFrameCounters[type].ammoSpawnTime === 0) {
+                        this.playerFrameCounters[type].ammoBag++
                     }
                 }
             }

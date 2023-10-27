@@ -102,8 +102,10 @@ export class Player {
             }
             this.loadImage();
             if (this.frame.count === 2 && this.shootFrameCounter === 2) {
-                console.log(this.shootFrameCounter);
-                console.log(this.frame.count);
+                if (this.playerFrameCounters[this.frame.type].ammo > 0) {
+                    this.playerFrameCounters[this.frame.type].ammo--
+                    console.log('pif');
+                }
             }
             if (this.shootFrameCounter % this.playerFrameCounters[this.frame.type].KD === 0) {
                 this.frame.count++;

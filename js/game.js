@@ -1,9 +1,10 @@
 import { canvas, ctx } from "./utils/utils.js"
 import { preloadImages } from "./utils/load.js"
 import { Player } from "./player.js"
+import { HUD } from "./GUI/HUD.js";
 
 let data = {
-    player: { x: innerWidth / 2 - 151, y: innerHeight - 223, frame: { count: 0, action: 'idle', type: 'flashlight' }, speed: 200 },
+    player: { x: innerWidth / 2 - 151, y: innerHeight - 223, frame: { count: 0, action: 'idle', type: 'handgun' }, speed: 200 },
     images: preloadImages(1),
     slicer: 1.5,
 }
@@ -18,6 +19,7 @@ export class Game {
         this.mouseX = 0
         this.mouseY = 0
         this.player = new Player(data.player.x, data.player.y, data.slicer, data.images, data.player.frame, data.player.speed)
+        this.hud = new HUD(this.player.playerFrameCounters)
         canvas.addEventListener("mousemove", this.handleMouseMove.bind(this))
         // player controller binding
         window.addEventListener('keydown', this.handleKeyDown.bind(this))
@@ -73,11 +75,13 @@ export class Game {
         }
         this.player.updateMouseDirection(this.mouseX, this.mouseY)
         this.player.update(deltaTime, data.player.frame, this.mouseX, this.mouseY)
+        this.hud.update(this.player.frame.type)
     }
 
     draw() {
         ctx.clearRect(0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT)   // cleare frame
         this.player.draw()
+        this.hud.draw(ctx, this.player.frame.type)
     }
 
     drawRedCircle() {
